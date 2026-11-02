@@ -43,7 +43,7 @@ namespace StudentAPI.Controllers
                 firstname = student.Firstname,
                 middlename = student.Middlename,
 
-                acadlevel_id = student.Acadlevel_Id ?? 1,
+               acadlevel_id = student.Acadlevel_Id ?? 1,
                 acadlevel_name = student.Acadlevel_Name ?? "No Levels",
 
                 section_id = student.Section_Id ?? 1,
@@ -203,22 +203,23 @@ namespace StudentAPI.Controllers
         // POST: ADD STUDENT
         [HttpPost]
         public async Task<IActionResult> Add(
-            [FromBody] Student student)
+            [FromBody] Student input)
         {
+            Console.WriteLine($"Received input: {input.Firstname} {input.Lastname}, Acadlevel_Id: {input.AcadlevelId}, Section_Id: {input.SectionId}");
             var validationError = await ValidateStudentRelations(
-                student.AcadlevelId, student.SectionId);
+                input.AcadlevelId, input.SectionId);
 
             if (validationError != null)
                 return Error(validationError);
 
-            student.Id = 0;
+            input.Id = 0;
 
-            db.Students.Add(student);
+            db.Students.Add(input);
             await db.SaveChangesAsync();
 
             // Return newly inserted student
             var createdStudent = await StudentRows()
-                .FirstOrDefaultAsync(s => s.Id == student.Id);
+                .FirstOrDefaultAsync(s => s.Id == input.Id);
 
             return Success(createdStudent);
         }
@@ -237,12 +238,10 @@ namespace StudentAPI.Controllers
             if (student == null)
                 return Error("Student not found.", 404);
 
-            // Preserve existing links when the request omits their IDs.
-            var acadlevelId = input.AcadlevelId ?? student.AcadlevelId;
-            var sectionId = input.SectionId ?? student.SectionId;
+
 
             var validationError = await ValidateStudentRelations(
-                acadlevelId, sectionId);
+                input.AcadlevelId, input.SectionId);
 
             if (validationError != null)
                 return Error(validationError);
@@ -250,8 +249,8 @@ namespace StudentAPI.Controllers
             student.Lastname = input.Lastname;
             student.Firstname = input.Firstname;
             student.Middlename = input.Middlename;
-            student.AcadlevelId = acadlevelId;
-            student.SectionId = sectionId;
+            student.AcadlevelId = input.AcadlevelId;
+            student.SectionId = input.SectionId;
             student.Gender = input.Gender;
             student.Email = input.Email;
 
